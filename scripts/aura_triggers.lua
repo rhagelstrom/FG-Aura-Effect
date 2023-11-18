@@ -196,14 +196,6 @@ function onInit()
 	-- register OOB message handlers to allow player movement
 	OOBManager.registerOOBMsgHandler(OOB_MSGTYPE_AURATOKENMOVE, handleTokenMovement)
 
-	-- create proxy function to recalculate auras when adding tokens
-	handleStandardCombatAddPlacement_old = CombatRecordManager.handleStandardCombatAddPlacement
-	CombatRecordManager.handleStandardCombatAddPlacement = handleStandardCombatAddPlacement_new
-
-	-- create proxy function to recalculate auras when new windows are opened
-	onWindowOpened_old = Interface.onWindowOpened
-	Interface.onWindowOpened = onWindowOpened_new
-
 	-- create the proxy function to trigger aura calculation on token movement.
 	Token.addEventHandler('onMove', onMove)
 	Input.addEventHandler('onShift', onShift)
@@ -214,6 +206,14 @@ function onInit()
 	DB.addHandler(DB.getPath(CombatManager.CT_LIST .. '.*.effects.*.isactive'), 'onUpdate', onEffectChanged)
 	DB.addHandler(DB.getPath(CombatManager.CT_LIST .. '.*.effects.*'), 'onDelete', onEffectToBeRemoved)
 	DB.addHandler(DB.getPath(CombatManager.CT_LIST .. '.*.effects'), 'onChildDeleted', onEffectRemoved)
+
+	-- create proxy function to recalculate auras when adding tokens
+	handleStandardCombatAddPlacement_old = CombatRecordManager.handleStandardCombatAddPlacement
+	CombatRecordManager.handleStandardCombatAddPlacement = handleStandardCombatAddPlacement_new
+
+	-- create proxy function to recalculate auras when new windows are opened
+	onWindowOpened_old = Interface.onWindowOpened
+	Interface.onWindowOpened = onWindowOpened_new
 
 	CombatManager.setCustomTurnStart(updateAurasForTurnStart)
 
