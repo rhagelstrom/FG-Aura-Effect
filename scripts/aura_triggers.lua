@@ -78,11 +78,14 @@ end
 local sTime = ''
 function handleTokenMovement(msgOOB)
 	local time1 = nil
+	local token = CombatManager.getTokenFromCT(msgOOB.sCTNode);
+	if not token then return end
 	if bDebugPerformance then time1 = os.clock() end
-	local _, winImage = ImageManager.getImageControl(CombatManager.getTokenFromCT(msgOOB.sCTNode))
+
+	local _, winImage = ImageManager.getImageControl(token)
 	local rNodeStart = ActorManager.resolveActor(DB.findNode(msgOOB.sCTNode))
 
-	if AuraToken.isMovedFilter(msgOOB.sCTNode, CombatManager.getTokenFromCT(msgOOB.sCTNode)) then
+	if AuraToken.isMovedFilter(msgOOB.sCTNode, token) then
 		updateAurasForMap(winImage, rNodeStart)
 		if bDebugPerformance then
 			sTime = string.format('%s%s,', sTime, tostring(os.clock() - time1))
