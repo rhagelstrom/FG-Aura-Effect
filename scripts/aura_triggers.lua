@@ -182,9 +182,11 @@ function onShift()
 	if not Input.isShiftPressed() then
 		local tImages = ImageManager.getActiveImages()
 		for  _, image in ipairs(tImages) do
-			local aTokens = image.getSelectedTokens()
-			for  _, token in ipairs(aTokens) do
-				notifyTokenMove(token)
+			if type(image) == 'imagecontrol' then -- guard against rogue data in registered images
+				local aTokens = image.getSelectedTokens()
+				for  _, token in ipairs(aTokens) do
+					notifyTokenMove(token)
+				end
 			end
 		 end
 	end
