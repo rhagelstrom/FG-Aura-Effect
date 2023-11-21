@@ -81,6 +81,10 @@ Special aura types change the default behavior of auras. They are specified in t
 |**single**|There are a number of spells and effects, particularly in the 5E ruleset, which necessitate a slightly different aura behavior. These have the text or something similar *"When the creature enters the area for the first time on a turn or starts its turn there"*. The aura will be applied to the target only when the target starts its turn in the aura or enters (moves into) the area for the first time on a turn. It will not be reapplied if the target leaves the area and returns on the same turn. It also will not be applied if the actor is in the area when cast or if the aura area moves onto the actor.|```AURA: 10 !ally,single; Test; IF: FACTION(!self); ATK: -5```|
 |**sticky**|Applied aura effects will not be removed from actors|```AURA: 10 all,sticky; Poison Trap; IF: FACTION(!self); Poisoned```|
 |**once**|The aura will only apply once per turn to an actor that starts or enters the area or if the area moves onto the actor. Leaving and re-entering the area on the same turn will not reapply the aura| ```AURA: 10 all,once; ATK: -5```|
+### Point Descriptor
+By default the sphere aura distance is calcuated from the outside of the token that is linked to the CT Actor. The descriptor "point" can be added to have that distance instead be calculated from the center of the token
+```AURA: 10 all,point; ATK: -5```
+
 ### Option for disabling aura effect chat messages
 "Silence Notifications for Aura Types" can be used to hide aura apply/removal chat messages for a particular faction, relationship, or all.
 ### Option for Diagonal Distance Multiplier
