@@ -73,7 +73,7 @@ If using a proxy CT token to define an aura area, it is recommended to set the p
 Unless there is a specific advanced case to do so, any other FACTION conditional operators are not needed for an aura.
 
 ### Special AURA types
-Special aura types change the default behavior of auras. They are specified in the AURA effect descriptors. Multiple special aura types can be combined to create even more unique aruas such as cube that is single and sticky.
+Special aura types change the default behavior of auras. They are specified in the AURA effect descriptors. Multiple special aura types can be combined to create even more unique auras such as cube that is single and sticky.
 
 |Descriptor|Notes|Example|
 |----------|-----|-------|
@@ -90,8 +90,7 @@ By default the sphere aura distance is calcuated from the outside of the token t
 ### Option for Diagonal Distance Multiplier
 "Diagonal Multiplier for Aura Distance" defines how diagonals are calcuated with respect to distance between tokens
 * ***Raw*** - Default, Diagonals are measured explicitly (Pythagorean Theorem)
-* ***1x*** - Diagonals are measured as a distance of 1 (like 5E)
-* ***1.5x*** - Diagonals are measured as a distance of 1.5 rounded down (like 35E/pathfinder)
+* ***Ruleset** - Diagonals are measured as per Ruleset Defination
 
 # Effect Sharing Threads
 5E: https://www.fantasygrounds.com/forums/showthread.php?69965-5E-Aura-Effects-Coding
