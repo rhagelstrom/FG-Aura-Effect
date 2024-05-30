@@ -4,7 +4,7 @@
 -- luacheck: globals bDebug updateAura addAura removeAura removeAllFromAuras isAuraApplicable
 -- luacheck: globals auraString getAuraDetails
 -- luacheck: globals AuraFactionConditional.DetectedEffectManager.parseEffectComp AuraFactionConditional.DetectedEffectManager.checkConditional
--- luacheck: globals AuraTracker AuraToken getPathsOncePerTurn
+-- luacheck: globals AuraTracker AuraToken getPathsOncePerTurn checkDying
 bDebug = false
 
 OOB_MSGTYPE_AURATOKENMOVE = 'aurasontokenmove'
@@ -12,6 +12,7 @@ OOB_MSGTYPE_AURATOKENMOVE = 'aurasontokenmove'
 auraString = 'AURA: %d+'
 
 local aAuraFactions = { 'ally', 'enemy', 'friend', 'foe', 'all', 'neutral', 'none' }
+local aOtherDescriptors = { 'dying' }
 
 -- Checks AURA effect string common needed information
 function getAuraDetails(nodeEffect)
@@ -26,6 +27,9 @@ function getAuraDetails(nodeEffect)
 		sSource = '',
 		sAuraNode = '',
 		aFactions = {},
+		aOtherFilters = {},
+		bDying = false;
+
 	}
 	if not AuraFactionConditional.DetectedEffectManager.parseEffectComp then
 		return rDetails
@@ -58,6 +62,8 @@ function getAuraDetails(nodeEffect)
 					end
 					if StringManager.contains(aAuraFactions, sFilterCheck) then
 						table.insert(rDetails.aFactions, sFilter:lower())
+					elseif StringManager.contains(aOtherDescriptors, sFilterCheck) then
+						table.insert(rDetails.aOtherFilters, sFilter:lower())
 					end
 				end
 			end
@@ -185,8 +191,23 @@ local function checkConditionalBeforeAura(nodeEffect, rSource, rTarget)
 	return true
 end
 
+function checkDying(rAuraDetails)
+	local bFilterDying = StringManager.contains(rAuraDetails.aOtherFilters, 'dying')
+	local bFilterNotDying = StringManager.contains(rAuraDetails.aOtherFilters, '!dying')
+
+	local bReturn = false
+	if  bFilterDying or bFilterNotDying then
+		if (rAuraDetails.bDying and bFilterDying) or (not rAuraDetails.bDying and bFilterNotDying) then
+			bReturn = true;
+		end
+	else
+		bReturn = true;
+	end
+	return bReturn
+end
+
 -- Should auras in range be added to this target?
-function isAuraApplicable(nodeEffect, rSource, rTarget, aFactions)
+function isAuraApplicable(nodeEffect, rSource, rTarget, AuraDetails)
 	local rAuraSource
 
 	local sSourcePath = DB.getValue(nodeEffect, 'source_name', '')
@@ -196,7 +217,7 @@ function isAuraApplicable(nodeEffect, rSource, rTarget, aFactions)
 		rAuraSource = ActorManager.resolveActor(DB.findNode(DB.getPath(DB.getChild(nodeEffect, '...'))))
 	end
 
-	local aConditions = { 'FACTION(' .. table.concat(aFactions, ',') .. ')' }
+	local aConditions = { 'FACTION(' .. table.concat(AuraDetails.aFactions, ',') .. ')' }
 	local aCondHelper = {}
 	if EffectManager4E then
 		aCondHelper.remainder = aConditions
@@ -204,11 +225,14 @@ function isAuraApplicable(nodeEffect, rSource, rTarget, aFactions)
 	else
 		aCondHelper = aConditions
 	end
+
 	if
 		rTarget ~= rSource
 		and DB.getValue(nodeEffect, 'isactive', 0) == 1
 		and checkConditionalBeforeAura(nodeEffect, rSource, rTarget)
 		and AuraFactionConditional.DetectedEffectManager.checkConditional(rAuraSource, nodeEffect, aCondHelper, rTarget)
+		and checkDying(AuraDetails)
+
 	then
 		return true
 	end
@@ -225,6 +249,7 @@ function updateAura(tokenSource, nodeEffect, rAuraDetails, rMoved)
 	local tAdd, tRemove = {}, {}
 	-- compile lists
 	local rSource = ActorManager.resolveActor(DB.findNode(rAuraDetails.sSource))
+	rAuraDetails.bDying = ActorHealthManager.isDyingOrDead(rSource)
 	local aTokens
 	local aFromAuraNodes = AuraTracker.getTrackedFromAuras(rAuraDetails.sSource, rAuraDetails.sAuraNode)
 	if rAuraDetails.bCube then
@@ -243,7 +268,7 @@ function updateAura(tokenSource, nodeEffect, rAuraDetails, rMoved)
 		if nodeCTToken then -- Guard against non-CT linked tokens
 			local rTarget = ActorManager.resolveActor(nodeCTToken)
 			aFromAuraNodes[rTarget.sCTNode] = nil -- Processed so mark as such
-			if isAuraApplicable(nodeEffect, rSource, rTarget, rAuraDetails.aFactions) then
+			if isAuraApplicable(nodeEffect, rSource, rTarget, rAuraDetails) then
 				if rAuraDetails.bSingle or rAuraDetails.bOnce then
 					if
 						not AuraTracker.checkOncePerTurn(rAuraDetails.sSource, rAuraDetails.sAuraNode, rTarget.sCTNode)
@@ -255,6 +280,8 @@ function updateAura(tokenSource, nodeEffect, rAuraDetails, rMoved)
 				else
 					tAdd[token.getId()] = { nodeEffect, nodeCTToken }
 				end
+			else
+				table.insert(tRemove, { nodeEffect, nodeCTToken })
 			end
 		end
 	end
